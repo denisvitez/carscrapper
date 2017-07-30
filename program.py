@@ -22,12 +22,23 @@ def retrieveDataForLink(url):
 
 def processCar(carData):
     adTitle = carData.xpath('div[@class="ResultsAdData"]//a[@class="Adlink"]//span/text()')
+    adLink = carData.xpath('div[@class="ResultsAdData"]//a[@class="Adlink"]/@href')
+    adPrice = carData.xpath('div[@class="ResultsAdPriceLogo"]//div[@class="ResultsAdPrice"]/text()')
+    print("Adlink: ")
+    print(adLink[0])
+    parsedLink = "http://www.avto.net"+adLink[0][adLink[0].index("/"):]
+    print(parsedLink)
     adInfo = carData.xpath('div[@class="ResultsAdData"]//ul//li/text()')
     print("Ad title -->"+adTitle[0])
     print("Ad info -->")
     print(adInfo)
+    print("Car price -->")
+    parsedPrice = "".join(adPrice).strip()
+    print(parsedPrice)
     result = [adTitle[0]]
     result.extend(adInfo)
+    result.append(parsedLink)
+    result.append(parsedPrice)
     print("Result -->")
     print(result)
     return result
@@ -81,7 +92,7 @@ def sendEmail(sender, reciever, username, password, serverAddr, data, tag):
     msg['FROM'] = sender
     msg['To'] = reciever
     msg['Subject'] = Header(("New car add was detected | "+tag).encode('utf-8'), 'UTF-8').encode()
-    payloadRaw = "Car info:<br/><b>%s</b><br/><b>%s</b><br/><b>%s</b><br/><b>%s</b><br/><b>%s</b>" % (data[0], data[1], data[2], data[3], data[4])
+    payloadRaw = "Car info:<br/><b>%s</b><br/><b>%s</b><br/><b>%s</b><br/><b>%s</b><br/><b>%s</b><br/><b>%s</b><br/><br/><a href='%s'>See add</a>" % (data[0], data[1], data[2], data[3], data[4], data[6], data[5])
     _attach = MIMEText(payloadRaw.encode('utf-8'), 'html', 'UTF-8')
     msg.attach(_attach)
     server.sendmail(sender, reciever, msg.as_string())
@@ -104,7 +115,7 @@ if __name__ == "__main__":
             #check stored result of most recent add
             if not (str(carHash(cars[0])).strip() == previous[i].strip()):
                 print("Car is new, send notification")
-                sendEmail("xxx", "xxx", "xxx", "xxx", "smtp.gmail.com:587", cars[0], tag)
+                sendEmail("sender", "recepient", "username", "password", "server", cars[0], tag)
             else:
                 print("Nothing has changed, nothing will be reported.")
         #create new hash
